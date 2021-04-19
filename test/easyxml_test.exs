@@ -1,5 +1,5 @@
 defmodule EasyXMLTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   doctest EasyXML
 
   test "greets the world" do
