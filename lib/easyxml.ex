@@ -1,15 +1,58 @@
-defmodule EasyXML do
-  def parse!(binary, opts \\ []) do
-    xml = normalize(binary)
-    decode(xml, opts)
+defmodule EasyXML.Node do
+  defstruct [:node]
+
+  defimpl Inspect do
+    import Inspect.Algebra
+
+    def inspect(node, _opts) do
+      doc = EasyXML.to_algebra(node)
+      concat(["#EasyXML.Node[", doc, "]"])
+    end
   end
 
   @doc false
-  def normalize(binary) do
-    data = :erlang.binary_to_list(binary)
-    {doc, _} = :xmerl_scan.string(data, space: :normalize, comments: false)
-    [clean] = :xmerl_lib.remove_whitespace([doc])
-    clean
+  def fetch(node, "@" <> key) do
+    case EasyXML.xpath(node, "@#{key}") do
+      [value] when is_binary(value) ->
+        {:ok, value}
+
+      [] ->
+        :error
+    end
+  end
+
+  def fetch(node, key) do
+    case EasyXML.xpath(node, "#{key}/text()") do
+      [value] when is_binary(value) ->
+        {:ok, value}
+
+      [] ->
+        case EasyXML.xpath(node, key) do
+          [value] when is_binary(value) ->
+            {:ok, value}
+
+          [] ->
+            nil
+
+          nodes ->
+            raise "node[#{inspect(key)}] only works on single nodes with text, use EasyXML.xpath/2 for other cases. Got: #{inspect(nodes)}"
+        end
+    end
+  end
+end
+
+defmodule EasyXML do
+  def parse!(xml) do
+    xml = :erlang.binary_to_list(xml)
+    # TODO: fix encoding
+    {node, rest} = :xmerl_scan.string(xml, space: :normalize, comments: false, encoding: :latin1)
+
+    if rest != '' do
+      raise "trailing content: #{rest}"
+    end
+
+    [node] = :xmerl_lib.remove_whitespace([node])
+    %EasyXML.Node{node: node}
   end
 
   require Record
@@ -18,92 +61,40 @@ defmodule EasyXML do
     Record.defrecordp(name, fields)
   end
 
-  defp decode(xmlAttribute(value: value), _opts) do
-    List.to_string(value)
+  def xpath(xml, path) when is_binary(xml) and is_binary(path) do
+    xpath(parse!(xml), path)
   end
 
-  defp decode(xmlText(value: value), _opts) do
-    List.to_string(value)
-  end
+  def xpath(%EasyXML.Node{} = node, path) when is_binary(path) do
+    for node <- :xmerl_xpath.string(String.to_charlist(path), node.node) do
+      case node do
+        binary when is_binary(binary) ->
+          binary
 
-  defp decode(doc, opts) do
-    doc = :xmerl_lib.simplify_element(doc)
-    keys = Keyword.get(opts, :keys, :binaries)
-    do_xml_decode(doc, keys)
-  end
+        xmlAttribute(value: value) ->
+          List.to_string(value)
 
-  def xpath(binary, path, opts \\ []) when is_binary(binary) and is_binary(path) do
-    doc = normalize(binary)
+        xmlText(value: value) ->
+          List.to_string(value)
 
-    :xmerl_xpath.string(String.to_charlist(path), doc)
-    |> Enum.map(&decode(&1, opts))
-  end
-
-  def dump_to_iodata(data, opts \\ []) do
-    keys = Keyword.get(opts, :keys, :binaries)
-
-    prolog = xmlAttribute(name: :prolog, value: "<?xml version=\"1.0\" encoding=\"utf-8\"?>")
-    xml = do_xml_encode(data, keys)
-    :xmerl.export_simple([xml], :xmerl_xml, [prolog])
-  end
-
-  defp do_xml_encode({tag, attrs, content}, keys) do
-    {encode_key(tag, keys), xml_attrs_encode(attrs, keys), do_xml_encode(content, keys)}
-  end
-
-  defp do_xml_encode({tag, attrs}, keys) when is_map(attrs) do
-    {encode_key(tag, keys), xml_attrs_encode(attrs, keys), []}
-  end
-
-  defp do_xml_encode({tag, content}, keys) do
-    {encode_key(tag, keys), [], do_xml_encode(content, keys)}
-  end
-
-  defp do_xml_encode(list, keys) when is_list(list) do
-    Enum.map(list, &do_xml_encode(&1, keys))
-  end
-
-  defp do_xml_encode(binary, _keys) when is_binary(binary) do
-    [:erlang.binary_to_list(binary)]
-  end
-
-  defp do_xml_decode({tag, [], content}, keys) do
-    {decode_key(tag, keys), do_xml_decode(content, keys)}
-  end
-
-  defp do_xml_decode({tag, attrs, content}, keys) do
-    {decode_key(tag, keys), xml_attrs_decode(attrs, keys), do_xml_decode(content, keys)}
-  end
-
-  defp do_xml_decode([charlist], _keys) when is_list(charlist) do
-    List.to_string(charlist)
-  end
-
-  defp do_xml_decode(list, keys) when is_list(list) do
-    for item <- list do
-      if is_list(item) do
-        List.to_string(item)
-      else
-        do_xml_decode(item, keys)
+        xmlElement() = element ->
+          %EasyXML.Node{node: element}
       end
     end
   end
 
-  def xml_attrs_encode(attrs, keys) when is_map(attrs) do
-    for {name, value} <- attrs do
-      {encode_key(name, keys), :erlang.binary_to_list(value)}
-    end
+  def dump_to_iodata(%EasyXML.Node{node: xmlElement() = node}) do
+    prolog = xmlAttribute(name: :prolog, value: "<?xml version=\"1.0\" encoding=\"utf-8\"?>")
+    :xmerl.export_simple([node], :xmerl_xml, [prolog])
   end
 
-  defp xml_attrs_decode(attrs, keys) do
-    for {name, value} <- attrs, into: %{} do
-      {decode_key(name, keys), List.to_string(value)}
-    end
+  def to_algebra(%EasyXML.Node{node: xmlElement() = element}) do
+    doc = :xmerl.export_simple([element], :xmerl_xml, [])
+    "<?xml version=\"1.0\"?>" <> rest = IO.iodata_to_binary(doc)
+    rest
   end
 
-  defp encode_key(key, :atoms), do: key
-  defp encode_key(key, :binaries), do: String.to_atom(key)
-
-  defp decode_key(key, :atoms), do: key
-  defp decode_key(key, :binaries), do: Atom.to_string(key)
+  def to_algebra(%EasyXML.Node{node: xmlAttribute(value: value)}) do
+    List.to_string(value)
+  end
 end

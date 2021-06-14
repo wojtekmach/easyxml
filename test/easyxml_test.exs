@@ -3,7 +3,7 @@ defmodule EasyXMLTest do
   doctest EasyXML
 
   test "it works" do
-    encoded = """
+    xml = """
     <?xml version="1.0" encoding="utf-8"?>\
     <points>\
     <point x="1" y="2"/>\
@@ -11,28 +11,8 @@ defmodule EasyXMLTest do
     </points>\
     """
 
-    decoded =
-      {"points",
-       [
-         {"point", %{"x" => "1", "y" => "2"}, []},
-         {"point", %{"x" => "3", "y" => "4"}, []}
-       ]}
-
-    assert EasyXML.parse!(encoded) == decoded
-    assert EasyXML.dump_to_iodata(decoded) |> IO.iodata_to_binary() == encoded
-
-    assert EasyXML.xpath(encoded, "//point") == [
-             {"point", %{"x" => "1", "y" => "2"}, []},
-             {"point", %{"x" => "3", "y" => "4"}, []}
-           ]
-  end
-
-  test "text" do
-    encoded = """
-    <?xml version="1.0" encoding="utf-8"?>\
-    <foo>bar</foo>
-    """
-
-    assert EasyXML.xpath(encoded, "//foo/text()") == ["bar"]
+    node = EasyXML.parse!(xml)
+    assert node |> EasyXML.dump_to_iodata() |> IO.iodata_to_binary() == xml
+    assert EasyXML.xpath(node, "//point") |> Enum.map(& &1["@x"]) == ["1", "3"]
   end
 end
