@@ -1,20 +1,43 @@
 defmodule EasyXML do
   def parse!(binary, opts \\ []) do
-    keys = Keyword.get(opts, :keys, :binaries)
+    xml = normalize(binary)
+    decode(xml, opts)
+  end
 
+  @doc false
+  def normalize(binary) do
     data = :erlang.binary_to_list(binary)
     {doc, _} = :xmerl_scan.string(data, space: :normalize, comments: false)
     [clean] = :xmerl_lib.remove_whitespace([doc])
-    xml = :xmerl_lib.simplify_element(clean)
-    do_xml_decode(xml, keys)
+    clean
   end
 
   require Record
 
-  Record.defrecordp(
-    :xmlAttribute,
-    Record.extract(:xmlAttribute, from_lib: "xmerl/include/xmerl.hrl")
-  )
+  for {name, fields} <- Record.extract_all(from_lib: "xmerl/include/xmerl.hrl") do
+    Record.defrecordp(name, fields)
+  end
+
+  defp decode(xmlAttribute(value: value), _opts) do
+    List.to_string(value)
+  end
+
+  defp decode(xmlText(value: value), _opts) do
+    List.to_string(value)
+  end
+
+  defp decode(doc, opts) do
+    doc = :xmerl_lib.simplify_element(doc)
+    keys = Keyword.get(opts, :keys, :binaries)
+    do_xml_decode(doc, keys)
+  end
+
+  def xpath(binary, path, opts \\ []) when is_binary(binary) and is_binary(path) do
+    doc = normalize(binary)
+
+    :xmerl_xpath.string(String.to_charlist(path), doc)
+    |> Enum.map(&decode(&1, opts))
+  end
 
   def dump_to_iodata(data, opts \\ []) do
     keys = Keyword.get(opts, :keys, :binaries)
