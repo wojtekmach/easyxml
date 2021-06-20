@@ -1,6 +1,12 @@
 defmodule EasyXML.Doc do
   defstruct [:doc, :backend]
 
+  @type t() :: %EasyXML.Doc{doc: term(), backend: module()}
+
+  @moduledoc """
+  The XML document.
+  """
+
   defimpl Inspect do
     def inspect(doc, opts) do
       Inspect.Algebra.concat([

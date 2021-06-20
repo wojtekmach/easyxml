@@ -1,9 +1,13 @@
 defmodule EasyXML.Backend do
-  @callback parse!(xml :: String.t(), opts :: keyword()) :: %EasyXML.Doc{}
+  @moduledoc """
+  Specification for the XML backends.
+  """
 
-  @callback xpath(%EasyXML.Doc{}, path :: String.t()) :: [term()]
+  @callback parse!(xml :: String.t(), opts :: keyword()) :: EasyXML.Doc.t()
 
-  @callback to_algebra(%EasyXML.Doc{}, opts :: keyword()) :: Inspect.Algebra.t()
+  @callback xpath(doc :: EasyXML.Doc.t(), path :: String.t()) :: [term()]
 
-  @callback dump_to_iodata(%EasyXML.Doc{}) :: iodata()
+  @callback to_algebra(doc :: EasyXML.Doc.t(), opts :: keyword()) :: Inspect.Algebra.t()
+
+  @callback dump_to_iodata(doc :: EasyXML.Doc.t()) :: iodata()
 end

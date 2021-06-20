@@ -1,6 +1,6 @@
 defmodule EasyXML.Backend.Xmerl do
   @moduledoc """
-  An `:xmerl` based backend.
+  A backend based on `:xmerl`.
   """
 
   @behaviour EasyXML.Backend
