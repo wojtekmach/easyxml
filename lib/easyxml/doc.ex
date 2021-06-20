@@ -13,8 +13,10 @@ defmodule EasyXML.Doc do
   ## Examples
 
       iex> doc = EasyXML.parse!("<hello>world</hello>")
-      iex> doc["hello"]
+      iex> EasyXML.Doc.fetch(doc, "/hello")
       {:ok, "world"}
+      iex> EasyXML.Doc.fetch(doc, "/unknown")
+      :error
   """
   def fetch(doc, xpath)
 
