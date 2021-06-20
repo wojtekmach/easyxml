@@ -6,7 +6,7 @@ defmodule EasyXML.Backend.Xmerl do
   @behaviour EasyXML.Backend
 
   @impl true
-  def parse!(xml, opts \\ []) do
+  def parse!(xml, opts) do
     xml = :erlang.binary_to_list(xml)
     # TODO: fix encoding
     opts = Keyword.merge([space: :normalize, comments: false, encoding: :latin1], opts)

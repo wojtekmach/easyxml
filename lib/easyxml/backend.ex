@@ -5,7 +5,7 @@ defmodule EasyXML.Backend do
 
   @callback parse!(xml :: String.t(), opts :: keyword()) :: EasyXML.Doc.t()
 
-  @callback xpath(doc :: EasyXML.Doc.t(), path :: String.t()) :: [term()]
+  @callback xpath(doc :: EasyXML.Doc.t(), xpath :: String.t()) :: [term()]
 
   @callback to_algebra(doc :: EasyXML.Doc.t(), opts :: keyword()) :: Inspect.Algebra.t()
 

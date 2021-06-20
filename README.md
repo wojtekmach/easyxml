@@ -10,7 +10,10 @@ An easy-to-use XML library for Elixir.
 
   * Convenient access via the `doc[xpath]` notation
 
-  * Support for multiple backends
+  * Supports multiple backends:
+
+      * `EasyXML.Backend.Xmerl` (default)
+      * `EasyXML.Backend.Saxmerl`
 
 ## Usage
 
