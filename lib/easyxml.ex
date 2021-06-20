@@ -6,50 +6,6 @@ defmodule EasyXML do
              |> String.split("<!-- MDOC !-->")
              |> Enum.fetch!(1)
 
-  defstruct [:backend, :private]
-
-  @type t() :: %EasyXML{backend: module()}
-
-  defimpl Inspect do
-    def inspect(doc, opts) do
-      Inspect.Algebra.concat([
-        "#EasyXML[",
-        doc.backend.to_algebra(doc, opts),
-        "]"
-      ])
-    end
-  end
-
-  @doc false
-  def fetch(doc, "@" <> key) do
-    case xpath(doc, "@#{key}") do
-      [value] when is_binary(value) ->
-        {:ok, value}
-
-      [] ->
-        :error
-    end
-  end
-
-  def fetch(doc, path) do
-    case xpath(doc, "#{path}/text()") do
-      [value] when is_binary(value) ->
-        {:ok, value}
-
-      [] ->
-        case EasyXML.xpath(doc, path) do
-          [value] when is_binary(value) ->
-            {:ok, value}
-
-          [] ->
-            :error
-
-          doc ->
-            raise "doc[path] only works on single nodes with text content, use EasyXML.xpath/2 for other cases. Got: #{inspect(doc)}"
-        end
-    end
-  end
-
   @doc """
   Parses an XML string into a document.
 
@@ -87,7 +43,7 @@ defmodule EasyXML do
   """
   def xpath(doc_or_xml, path)
 
-  def xpath(%EasyXML{} = doc, path) when is_binary(path) do
+  def xpath(%EasyXML.Doc{} = doc, path) when is_binary(path) do
     doc.backend.xpath(doc, path)
   end
 
@@ -98,7 +54,7 @@ defmodule EasyXML do
   @doc """
   Dumps the XML document into an iodata.
   """
-  def dump_to_iodata(%EasyXML{} = doc) do
+  def dump_to_iodata(%EasyXML.Doc{} = doc) do
     doc.backend.dump_to_iodata(doc)
   end
 end
