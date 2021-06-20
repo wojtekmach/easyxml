@@ -8,7 +8,7 @@ An easy-to-use XML library for Elixir.
 
 ## Features
 
-  * Convenient access via the `doc[path]` notation
+  * Convenient access via the `doc[xpath]` notation
 
   * Support for multiple backends
 

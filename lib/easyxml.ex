@@ -41,14 +41,14 @@ defmodule EasyXML do
       #=> ["1"]
 
   """
-  def xpath(doc_or_xml, path)
+  def xpath(doc_or_xml, xpath)
 
-  def xpath(%EasyXML.Doc{} = doc, path) when is_binary(path) do
-    doc.backend.xpath(doc, path)
+  def xpath(%EasyXML.Doc{} = doc, xpath) when is_binary(xpath) do
+    doc.backend.xpath(doc, xpath)
   end
 
-  def xpath(xml, path) when is_binary(xml) do
-    xml |> parse!() |> xpath(path)
+  def xpath(xml, xpath) when is_binary(xml) do
+    xml |> parse!() |> xpath(xpath)
   end
 
   @doc """

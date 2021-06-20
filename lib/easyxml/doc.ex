@@ -28,13 +28,13 @@ defmodule EasyXML.Doc do
     end
   end
 
-  def fetch(doc, path) do
-    case EasyXML.xpath(doc, "#{path}/text()") do
+  def fetch(doc, xpath) do
+    case EasyXML.xpath(doc, "#{xpath}/text()") do
       [value] when is_binary(value) ->
         {:ok, value}
 
       [] ->
-        case EasyXML.xpath(doc, path) do
+        case EasyXML.xpath(doc, xpath) do
           [value] when is_binary(value) ->
             {:ok, value}
 
@@ -42,7 +42,7 @@ defmodule EasyXML.Doc do
             :error
 
           doc ->
-            raise "doc[path] only works on single nodes with text content, use EasyXML.xpath/2 for other cases. Got: #{inspect(doc)}"
+            raise "doc[xpath] only works on single nodes with text content, use EasyXML.xpath/2 for other cases. Got: #{inspect(doc)}"
         end
     end
   end
