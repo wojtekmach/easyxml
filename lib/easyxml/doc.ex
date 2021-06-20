@@ -7,17 +7,17 @@ defmodule EasyXML.Doc do
   The XML document.
   """
 
-  defimpl Inspect do
-    def inspect(doc, opts) do
-      Inspect.Algebra.concat([
-        "#EasyXML.Doc[",
-        doc.backend.to_algebra(doc, opts),
-        "]"
-      ])
-    end
-  end
+  @doc """
+  Fetch the text specified by the given `xpath`.
 
-  @doc false
+  ## Examples
+
+      iex> doc = EasyXML.parse!("<hello>world</hello>")
+      iex> doc["hello"]
+      {:ok, "world"}
+  """
+  def fetch(doc, xpath)
+
   def fetch(doc, "@" <> key) do
     case EasyXML.xpath(doc, "@#{key}") do
       [value] when is_binary(value) ->
@@ -44,6 +44,16 @@ defmodule EasyXML.Doc do
           doc ->
             raise "doc[path] only works on single nodes with text content, use EasyXML.xpath/2 for other cases. Got: #{inspect(doc)}"
         end
+    end
+  end
+
+  defimpl Inspect do
+    def inspect(doc, opts) do
+      Inspect.Algebra.concat([
+        "#EasyXML.Doc[",
+        doc.backend.to_algebra(doc, opts),
+        "]"
+      ])
     end
   end
 end
