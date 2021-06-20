@@ -24,15 +24,13 @@ Mix.install([
   {:easyxml, "~> 0.1.0-dev", github: "wojtekmach/easyxml", branch: "main"}
 ])
 
-xml =
-  """
+doc =
+  EasyXML.parse!("""
   <points>
     <point x="1" y="2"/>
     <point x="3" y="4"/>
   </points>
-  """
-
-doc = EasyXML.parse!(xml)
+  """)
 
 EasyXML.xpath(doc, "//point/@x")
 #=> ["1", "3"]
