@@ -1,15 +1,15 @@
 defmodule EasyXML.Doc do
-  defstruct [:node]
+  defstruct [:doc]
 
   defimpl Inspect do
-    def inspect(node, opts) do
-      EasyXML.to_algebra(node, opts)
+    def inspect(doc, opts) do
+      EasyXML.to_algebra(doc, opts)
     end
   end
 
   @doc false
-  def fetch(node, "@" <> key) do
-    case EasyXML.xpath(node, "@#{key}") do
+  def fetch(doc, "@" <> key) do
+    case EasyXML.xpath(doc, "@#{key}") do
       [value] when is_binary(value) ->
         {:ok, value}
 
@@ -18,21 +18,21 @@ defmodule EasyXML.Doc do
     end
   end
 
-  def fetch(node, key) do
-    case EasyXML.xpath(node, "#{key}/text()") do
+  def fetch(doc, path) do
+    case EasyXML.xpath(doc, "#{path}/text()") do
       [value] when is_binary(value) ->
         {:ok, value}
 
       [] ->
-        case EasyXML.xpath(node, key) do
+        case EasyXML.xpath(doc, path) do
           [value] when is_binary(value) ->
             {:ok, value}
 
           [] ->
             :error
 
-          nodes ->
-            raise "node[#{inspect(key)}] only works on single nodes with text, use EasyXML.xpath/2 for other cases. Got: #{inspect(nodes)}"
+          doc ->
+            raise "doc[path] only works on single nodes with text content, use EasyXML.xpath/2 for other cases. Got: #{inspect(doc)}"
         end
     end
   end
@@ -42,14 +42,14 @@ defmodule EasyXML do
   def parse!(xml) do
     xml = :erlang.binary_to_list(xml)
     # TODO: fix encoding
-    {node, rest} = :xmerl_scan.string(xml, space: :normalize, comments: false, encoding: :latin1)
+    {doc, rest} = :xmerl_scan.string(xml, space: :normalize, comments: false, encoding: :latin1)
 
     if rest != '' do
       raise "trailing content: #{rest}"
     end
 
-    [node] = :xmerl_lib.remove_whitespace([node])
-    %EasyXML.Doc{node: node}
+    [doc] = :xmerl_lib.remove_whitespace([doc])
+    %EasyXML.Doc{doc: doc}
   end
 
   require Record
@@ -62,9 +62,9 @@ defmodule EasyXML do
     xpath(parse!(xml), path)
   end
 
-  def xpath(%EasyXML.Doc{} = node, path) when is_binary(path) do
-    for node <- :xmerl_xpath.string(String.to_charlist(path), node.node) do
-      case node do
+  def xpath(%EasyXML.Doc{} = doc, path) when is_binary(path) do
+    for doc <- :xmerl_xpath.string(String.to_charlist(path), doc.doc) do
+      case doc do
         binary when is_binary(binary) ->
           binary
 
@@ -75,24 +75,24 @@ defmodule EasyXML do
           List.to_string(value)
 
         xmlElement() = element ->
-          %EasyXML.Doc{node: element}
+          %EasyXML.Doc{doc: element}
       end
     end
   end
 
-  def dump_to_iodata(%EasyXML.Doc{node: xmlElement() = node}) do
+  def dump_to_iodata(%EasyXML.Doc{doc: xmlElement() = doc}) do
     prolog = xmlAttribute(name: :prolog, value: "<?xml version=\"1.0\" encoding=\"utf-8\"?>")
-    :xmerl.export_simple([node], :xmerl_xml, [prolog])
+    :xmerl.export_simple([doc], :xmerl_xml, [prolog])
   end
 
   import Inspect.Algebra
 
-  def to_algebra(%EasyXML.Doc{node: node}, opts) do
+  def to_algebra(%EasyXML.Doc{doc: doc}, opts) do
     opts = %{opts | syntax_colors: Keyword.put_new(opts.syntax_colors, :tag, :black)}
 
     concat([
       "#EasyXML.Doc[",
-      to_algebra(node, opts),
+      to_algebra(doc, opts),
       "]"
     ])
   end
