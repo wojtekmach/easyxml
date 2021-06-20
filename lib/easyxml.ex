@@ -18,10 +18,9 @@ defmodule EasyXML do
 
   ## Examples
 
-      doc = EasyXML.parse!("<hello>world</hello>")
-      #=> #EasyXML.Doc[<hello>world</hello>]
-      doc["hello"]
-      #=> "world"
+      iex> doc = EasyXML.parse!("<hello>world</hello>")
+      iex> doc["//hello"]
+      "world"
 
   """
   def parse!(xml, opts \\ []) do

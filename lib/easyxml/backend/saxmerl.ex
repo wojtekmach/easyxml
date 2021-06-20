@@ -1,6 +1,13 @@
 defmodule EasyXML.Backend.Saxmerl do
   @moduledoc """
   A backend based on `Saxmerl`.
+
+  ## Examples
+
+      iex> doc = EasyXML.parse!("<hello>world</hello>", backend: EasyXML.Backend.Saxmerl)
+      iex> doc["/hello"]
+      "world"
+
   """
 
   @behaviour EasyXML.Backend

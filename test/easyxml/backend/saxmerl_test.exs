@@ -1,5 +1,6 @@
 defmodule EasyXML.Backend.SaxmerlTest do
   use ExUnit.Case, async: true
+  doctest EasyXML.Backend.Saxmerl
 
   test "it works" do
     xml = """
