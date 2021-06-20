@@ -1,7 +1,7 @@
 defmodule EasyXML.Doc do
-  defstruct [:doc, :backend]
+  defstruct [:backend, :private]
 
-  @type t() :: %EasyXML.Doc{doc: term(), backend: module()}
+  @type t() :: %EasyXML.Doc{backend: module()}
 
   @moduledoc """
   The XML document.

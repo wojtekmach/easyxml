@@ -17,7 +17,7 @@ defmodule EasyXML.Backend.Xmerl do
     end
 
     [doc] = :xmerl_lib.remove_whitespace([doc])
-    %EasyXML.Doc{doc: doc, backend: __MODULE__}
+    %EasyXML.Doc{private: doc, backend: __MODULE__}
   end
 
   require Record
@@ -28,7 +28,7 @@ defmodule EasyXML.Backend.Xmerl do
 
   @impl true
   def xpath(%EasyXML.Doc{} = doc, path) when is_binary(path) do
-    for node <- :xmerl_xpath.string(String.to_charlist(path), doc.doc) do
+    for node <- :xmerl_xpath.string(String.to_charlist(path), doc.private) do
       case node do
         binary when is_binary(binary) ->
           binary
@@ -40,13 +40,13 @@ defmodule EasyXML.Backend.Xmerl do
           List.to_string(value)
 
         xmlElement() = element ->
-          %EasyXML.Doc{doc: element, backend: doc.backend}
+          %EasyXML.Doc{private: element, backend: doc.backend}
       end
     end
   end
 
   @impl true
-  def dump_to_iodata(%EasyXML.Doc{doc: xmlElement() = doc}) do
+  def dump_to_iodata(%EasyXML.Doc{private: xmlElement() = doc}) do
     prolog = xmlAttribute(name: :prolog, value: "<?xml version=\"1.0\" encoding=\"utf-8\"?>")
     :xmerl.export_simple([doc], :xmerl_xml, [prolog])
   end
@@ -54,7 +54,7 @@ defmodule EasyXML.Backend.Xmerl do
   import Inspect.Algebra
 
   @impl true
-  def to_algebra(%EasyXML.Doc{doc: doc}, opts) do
+  def to_algebra(%EasyXML.Doc{private: doc}, opts) do
     opts = %{opts | syntax_colors: Keyword.put_new(opts.syntax_colors, :tag, :black)}
     to_algebra(doc, opts)
   end
