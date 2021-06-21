@@ -36,10 +36,8 @@ defmodule EasyXML.MixProject do
 
   defp xref do
     [
-      xref: [
-        exclude: [
-          Saxmerl
-        ]
+      exclude: [
+        Saxmerl
       ]
     ]
   end
