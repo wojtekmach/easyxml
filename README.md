@@ -4,7 +4,7 @@
 
 <!-- MDOC !-->
 
-An easy-to-use XML library for Elixir.
+An experimental easy-to-use XML library for Elixir.
 
 ## Features
 
