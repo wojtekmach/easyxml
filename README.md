@@ -10,6 +10,8 @@ An experimental easy-to-use XML library for Elixir.
 
   * Convenient access via the `doc[xpath]` notation
 
+  * Pretty printing via the `Inspect` protocol
+
   * Supports multiple backends:
 
       * `EasyXML.Backend.Xmerl` (default)
@@ -31,6 +33,9 @@ doc =
     <point x="3" y="4"/>
   </points>
   """)
+
+EasyXML.xpath(doc, "//point[1]")
+#=> [#EasyXML.Doc[<point x="1" y="2"/>]]
 
 EasyXML.xpath(doc, "//point/@x")
 #=> ["1", "3"]
